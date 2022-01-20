@@ -1,0 +1,17 @@
+{
+    "name": "ryanphpjs/expressphp",
+    "description": "O Express.js convertido para php",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "RyanMatheusRamello",
+            "email": "ryan.matheus@aluno.ifsp.edu.br"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "ExpressPHP\\": "src/"
+        }
+    }
+}
