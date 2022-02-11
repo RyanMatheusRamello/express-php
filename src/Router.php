@@ -10,6 +10,7 @@ class Router {
     private $request;
     private $response;
     private $no_404;
+    private $routerActual = [];
 
     public $routers = [
         "GET" => [],
@@ -31,7 +32,11 @@ class Router {
 
         preg_match_all("/\:([^\/]+)/m", $uri, $matches, PREG_SET_ORDER, 0);
 
-        $muri = str_replace("*", "(.+)", $uri);
+        if($method == "USE"){
+            $muri = str_replace("*", "(.*)?", $uri);
+        }else{
+            $muri = str_replace("*", "(.*)", $uri);
+        }
         $str = preg_replace("/\:([^\/]+)/m", '([^/]+)', $muri);
         $uri_regex = '/^'.str_replace('/', '\/', $str).'\/?$/';
 
@@ -211,18 +216,27 @@ class Router {
 
                     $semNome = 0;
 
-                    foreach ($params as $key => $value){
+                    array_shift($params);
 
-                        if($key != "0"){
-
-                            if(count($router["params"][intval($key)-1]) == 0){
-                                $router["params"][intval($key)-1][] = $semNome;
+                    if(count($router["params"]) > 0){
+                        foreach ($params as $key => $value){
+    
+                            if(count($router["params"][intval($key)]) == 0){
+                                $router["params"][intval($key)][] = $semNome;
                                 $semNome++;
                             }
-                            $router["params"][intval($key)-1][] = $value;
-
+                            $router["params"][intval($key)][] = $value;
+    
                         }
-
+                    }else{
+                        if(count($params) > 0){
+                            foreach ($params as $key => $value){
+                                $router["params"][intval($key)] = [];
+                                $router["params"][intval($key)][] = $semNome;
+                                $semNome++;
+                                $router["params"][intval($key)][] = $value;
+                            }
+                        }
                     }
 
                     $param = [];
@@ -230,28 +244,13 @@ class Router {
                         $param[$value[0]] = $value[1];
                     }
 
-                    $this->request->__setParams($param);
-
-                    $next = function (...$d) {
-                        if(isset($d[0])){
-                            if(is_string($d[0])){
-                                echo $d[0];
-                            }elseif($d[0] instanceof \Error){
-                                echo $d[0]->getMessage();
-                            }else{
-                                echo "Um erro desconhecido ocorreu";
-                            }
-                        }
-                    };
-                    $content = ob_get_contents();
-                    ob_start();
-                    $router["function"]($this->request, $this->response, $next);
-                    $content = ob_get_contents();
-                    ob_end_clean();
-                    if($content != false){
-                        throw new \Error($content);
-                        return;
-                    }
+                    //$this->request->__setParams($param);
+                    $this->routerActual[] = [
+                        "use" => true,
+                        "param" => $param,
+                        "router" => $router
+                    ];
+                    //$router["function"]($this->request, $this->response, $next);
 
                 }
 
@@ -274,18 +273,27 @@ class Router {
 
                     $semNome = 0;
 
-                    foreach ($params as $key => $value){
+                    array_shift($params);
 
-                        if($key != "0"){
-
-                            if(count($router["params"][intval($key)-1]) == 0){
-                                $router["params"][intval($key)-1][] = $semNome;
+                    if(count($router["params"]) > 0){
+                        foreach ($params as $key => $value){
+    
+                            if(count($router["params"][intval($key)]) == 0){
+                                $router["params"][intval($key)][] = $semNome;
                                 $semNome++;
                             }
-                            $router["params"][intval($key)-1][] = $value;
-
+                            $router["params"][intval($key)][] = $value;
+    
                         }
-
+                    }else{
+                        if(count($params) > 0){
+                            foreach ($params as $key => $value){
+                                $router["params"][intval($key)] = [];
+                                $router["params"][intval($key)][] = $semNome;
+                                $semNome++;
+                                $router["params"][intval($key)][] = $value;
+                            }
+                        }
                     }
 
                     $param = [];
@@ -293,16 +301,48 @@ class Router {
                         $param[$value[0]] = $value[1];
                     }
 
-                    $this->request->__setParams($param);
-
-                    $router["function"]($this->request, $this->response);
+                    //$this->request->__setParams($param);
+                    //$router["function"]($this->request, $this->response);
+                    $this->routerActual[] = [
+                        "use" => false,
+                        "param" => $param,
+                        "router" => $router
+                    ];
 
                 }
 
             }
 
+            $this->processRouter();
+
         } catch (Error $error){
             $this->app->emit("error", $this->request, $this->response, $error);
+        }
+
+    }
+
+    public function processRouter($error = null){
+
+        if(!is_null($error)){
+            if($error instanceof Error){
+                throw $error;
+            }else{
+                throw new Error($error);
+            }
+        }
+        if(count($this->routerActual) == 0){
+            return;
+        }
+        $router = array_shift($this->routerActual);
+        $data = $this;
+        $this->request->__setParams($router["param"]);
+        $next = function($d=null) use($data){
+            $data->processRouter($d);
+        };
+        if($router["use"]){
+            $router["router"]["function"]($this->request, $this->response, $next);
+        }else{
+            $router["router"]["function"]($this->request, $this->response);
         }
 
     }
