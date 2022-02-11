@@ -103,7 +103,13 @@ class Response {
             'text/html' => function($data){return $data; },
             'text/css' => function($data){return $data; },
             'application/javascript' => function($data){return $data; },
-            'application/json' => function($data){return json_encode($data); },
+            'application/json' => function($data){
+                $result = json_decode($data);
+                if(json_last_error() === JSON_ERROR_NONE){
+                    return $data;
+                }
+                return json_encode($data); 
+            },
             'application/xml' => function($data){
                 if(function_exists("express_xml_encode")){
                     return express_xml_encode($data)->asXML();

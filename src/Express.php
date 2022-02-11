@@ -173,7 +173,7 @@ class Express {
 
         return function ($req, $res, $next) use ($folder) {
             $param = (array) $req->params;
-            if(file_exists($folder."/".$param[0])){
+            if(isset($param[0]) && file_exists($folder."/".$param[0]) && is_file($folder."/".$param[0])){
                 $res->sendFile($folder."/".$param[0]);
             }else{
                 $next();
