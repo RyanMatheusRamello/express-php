@@ -115,7 +115,7 @@ class Request {
         return false;
 
     }
-    
+
     public function get($name){
         foreach($this->header as $key => $val){
             if(mb_strtolower($key) == mb_strtolower($name)){

@@ -104,6 +104,9 @@ class Response {
             'text/css' => function($data){return $data; },
             'application/javascript' => function($data){return $data; },
             'application/json' => function($data){
+                if(is_array($data) || is_object($data)){
+                    return json_encode($data);
+                }
                 $result = json_decode($data);
                 if(json_last_error() === JSON_ERROR_NONE){
                     return $data;
