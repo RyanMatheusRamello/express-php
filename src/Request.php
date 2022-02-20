@@ -33,7 +33,7 @@ class Request {
      * Headers da requisição
      * @var array
      */
-    public $headers;
+    public $header;
 
     /**
      * Armazena o Host HTTP
@@ -114,6 +114,15 @@ class Request {
         }
         return false;
 
+    }
+    
+    public function get($name){
+        foreach($this->header as $key => $val){
+            if(mb_strtolower($key) == mb_strtolower($name)){
+                return $val;
+            }
+        }
+        return null;
     }
 
     /**
