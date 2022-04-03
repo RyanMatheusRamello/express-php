@@ -61,8 +61,11 @@ class Express {
         $this->engine("html", $htmlEngine);
         $this->set("views", "./");
         $this->set("view engine", "html");
-        $this->on("error", function($req, $res, $err){
-            $res->send($err->getMessage());
+        $app = $this;
+        $this->on("error", function($req, $res, $err) use ($app) {
+            if(count($app->_events["error"]) === 1){
+                $res->send($err->getMessage());
+            }
         });
 
     }

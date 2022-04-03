@@ -303,7 +303,7 @@ class Response {
         $contentType = $this->__getMimeType($options["root"].$filename);
         $this->set("Content-Type", $contentType);
         if($options["cacheControl"]){
-            $this->set("Cache-Control", $options["cacheControl"] . ", "($options["immutable"] ? "" : "immutable , ")."max-age=".$options["maxAge"]);
+            $this->set("Cache-Control", $options["cacheControl"] . ", " . ($options["immutable"] ? "" : "immutable , ")."max-age=".$options["maxAge"]);
         }else{
             $this->set("Cache-Control", "no-cache, no-store, must-revalidate");
         }
