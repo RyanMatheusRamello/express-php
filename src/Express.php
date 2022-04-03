@@ -47,7 +47,7 @@ class Express {
      */
     public function __construct(){
 
-
+    	\ExpressPHP\Static\MimeTypes::init();
         $this->request = new Request($this);
         $this->response = new Response($this, $this->request);
         $this->router = new Router($this, $this->request, $this->response);
@@ -83,6 +83,10 @@ class Express {
      * @param Closure $callback
      */
     public function get(string $router, ...$callback){
+
+    	if(count($callback) < 1){
+    		return $this->options[$name];
+    	}
 
         $this->router->get($router, ...$callback);
         return $this;
@@ -160,21 +164,29 @@ class Express {
     }
 
     public function on($name, $func){
-        $this->_events[$name] = $func;
+    	if(!isset($this->_events[$name])){
+    		$this->_events[$name] = [];
+    	}
+        $this->_events[$name][] = $func;
     }
 
     public function emit($name, ...$params){
 
-        $this->_events[$name](...$params);
+    	if(!isset($this->_events[$name])){
+    		return;
+    	}
+    	foreach($this->_events[$name] as $func){
+    		$func(...$params);
+    	}
 
     }
 
     public function static($folder){
 
         return function ($req, $res, $next) use ($folder) {
-            $param = (array) $req->params;
-            if(isset($param[0]) && file_exists($folder."/".$param[0]) && is_file($folder."/".$param[0])){
-                $res->sendFile($folder."/".$param[0]);
+            $path = $req->path;
+            if(file_exists($folder."/".$path) && is_file($folder."/".$path)){
+                $res->sendFile($folder."/".$path);
             }else{
                 $next();
             }

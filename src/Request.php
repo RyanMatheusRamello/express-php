@@ -63,6 +63,8 @@ class Request {
      */
     public $xhr;
 
+    public $baseUrl;
+
     public $routeUri;
 
     /**
@@ -72,7 +74,6 @@ class Request {
     public function __construct(Express $app){
         
         $this->app = $app;
-        $this->baseUrl = $_SERVER["DOCUMENT_ROOT"];
         if(!strcasecmp($_SERVER['REQUEST_METHOD'], 'DELETE')){
             parse_str(file_get_contents('php://input'), $this->body);
             if($this->body == null){
@@ -123,6 +124,16 @@ class Request {
             }
         }
         return null;
+    }
+
+    /**
+     * Define os parametros no $this->params
+     */
+    public function __setPath($path, $baseUrl){
+
+        $this->path = $path ?? "";
+        $this->baseUrl = $baseUrl ?? "";
+
     }
 
     /**
